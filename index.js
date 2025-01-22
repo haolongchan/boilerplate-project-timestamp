@@ -18,33 +18,34 @@ app.get("/", function (req, res) {
   res.sendFile(__dirname + '/views/index.html');
 });
 
-
 // your first API endpoint... 
 app.get("/api/hello", function (req, res) {
   res.json({greeting: 'hello API'});
 });
 
-app.get('/api/:date?', (req, res) => {
+app.get('/api/:input', (req, res) => {
   let obj = {unix: null, utc: null};
+  let input = req.params.input;
 
-  if (req.params.date) {
-    let date = new Date(req.params.date);
-    obj.unix = date.getTime();
-    obj.utc = date.toUTCString();
+  if (/^\d+$/.test(input)) {
+    // Numeric Unix timestamp
+    let unixTime = parseInt(input, 10);
+    obj.unix = unixTime;
+    obj.utc = new Date(unixTime).toUTCString();
   } else {
-    obj.unix = Date.now();
-    obj.utc = new Date().toUTCString();
+    // String date
+    let date = new Date(input);
+    if (!isNaN(date.getTime())) {
+      obj.unix = date.getTime();
+      obj.utc = date.toUTCString();
+    } else {
+      return res.status(400).json({error: "Invalid Date"});
+    }
   }
 
   res.json(obj);
-})
+});
 
-app.get('/api/:unix', (req, res) => {
-  let obj = {unix: null, utc: null};
-  obj.unix = req.params.unix;
-  obj.utc = new Date(req.params.unix).toUTCString();
-  res.json(obj);
-})
 
 app.get('/api', (req, res) => {
   let obj = {unix: null, utc: null};
